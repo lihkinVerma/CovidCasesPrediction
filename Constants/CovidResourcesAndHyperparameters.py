@@ -26,8 +26,8 @@ featuresToConsider = ['delta7Confirmed', 'delta7Deceased', 'delta7Recovered',
 # Path to save Data generated
 #---------------------------------------------
 pathToSavePredictionRelatedData = 'SaveModelAndPredictionResults'
-a = "CovidMultivariateLSTMModelSeqLength-11 epochs-100 lr-1e-05 predicting=delta7Confirmed.pth"
-b = "CovidMultivariateLSTMModelSeqLength-11 epochs-100 lr-1e-05 predicting=delta7Deceased.pth"
-c = "CovidMultivariateLSTMModelSeqLength-11 epochs-100 lr-1e-05 predicting=delta7Recovered.pth"
-d = "CovidMultivariateLSTMModelSeqLength-11 epochs-100 lr-1e-05 predicting=delta7Vaccinated.pth"
-e = "CovidMultivariateLSTMModelSeqLength-11 epochs-100 lr-1e-05 predicting=variantsOfConcernReported.pth"
+a = "CovidMultivariateLSTMModelSeqLength-11 epochs-1000 lr-1e-05 predicting=delta7Confirmed.pth"
+b = "CovidMultivariateLSTMModelSeqLength-11 epochs-1000 lr-1e-05 predicting=delta7Deceased.pth"
+c = "CovidMultivariateLSTMModelSeqLength-11 epochs-1000 lr-1e-05 predicting=delta7Recovered.pth"
+d = "CovidMultivariateLSTMModelSeqLength-11 epochs-1000 lr-1e-05 predicting=delta7Vaccinated.pth"
+e = "CovidMultivariateLSTMModelSeqLength-11 epochs-1000 lr-1e-05 predicting=variantsOfConcernReported.pth"

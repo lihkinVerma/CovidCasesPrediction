@@ -16,7 +16,6 @@ class TestNeuralNetwork:
     def testModelForSequences(self):
         dates, input, output = self.helper.getDateInputOutputFromSequences(self.testData)
         x_batch = torch.tensor(input, dtype=torch.float32)
-        print(x_batch)
         prediction = None
         if self.neuralNet is not None:
             self.neuralNet.init_hidden(x_batch.size(0))

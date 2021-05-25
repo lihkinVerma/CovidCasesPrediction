@@ -72,16 +72,7 @@ class DataProcessing:
         suffix = 'SeqLength-{} Epochs-{} Lr-{} Predicting-{}Cases'
         suffix = suffix.format(self.nTimeSteps, self.epochs, self.lr, self.featureToPredict)
         dff = self.obtainOutputForAllSequences(maxPrediction, minPrediction, trainedModelName)
-        datesToPrintOnGraph = [i if i.endswith('-01') else None for i in dff.date.tolist()]
-        self.helper.saveDataFrame(dff, 'OutputForWholeDataset'+suffix+'.csv')
-        dff.loc[:, ['actualCovidCases', 'predictedCovidCases']].plot.line()
-        plt.title('ModelPredictionForAllSequences\n' + suffix)
-        plt.xticks(range(0, len(datesToPrintOnGraph)), datesToPrintOnGraph, rotation = 60)
-        plt.xlabel('Timestamp')
-        plt.ylabel('Number of Cases')
-        plt.savefig(CovidResourcesAndHyperparameters.pathToSavePredictionRelatedData + '/ModelPredictionForAllSequences' + suffix + '.png',
-                    dpi = 300, bbox_inches='tight')
-        plt.show()
+        self.helper.visualizePredictionsOnTimelineGraph(dff, suffix)
         return dff
 
     def splitSequencesForKfoldCrossValidation(self, kfold):
@@ -140,6 +131,19 @@ class Helper:
             count = count + 1
         writer.save()
 
+    def visualizePredictionsOnTimelineGraph(self, dff, suffixName):
+        datesToPrintOnGraph = [i if i.endswith('-01') else None for i in dff.date.tolist()]
+        self.saveDataFrame(dff, 'OutputForWholeDataset' + suffixName + '.csv')
+        dff.loc[:, ['actualCovidCases', 'predictedCovidCases']].plot.line()
+        plt.title('ModelPredictionForAllSequences\n' + suffixName)
+        plt.xticks(range(0, len(datesToPrintOnGraph)), datesToPrintOnGraph, rotation=60)
+        plt.xlabel('Timestamp')
+        plt.ylabel('Number of Cases')
+        plt.savefig(
+            CovidResourcesAndHyperparameters.pathToSavePredictionRelatedData + '/ModelPredictionForAllSequences' + suffixName + '.png',
+            dpi=300, bbox_inches='tight')
+        plt.show()
+
 class PredictingFutureScenario:
     def __init__(self,
                  dataTilldate = None,
@@ -162,6 +166,7 @@ class PredictingFutureScenario:
         self.modelForVaccinatedPrediction.loadTorchModel(modelNameForVaccinatedPrediction)
         self.modelForVariantsPrediction = TestNeuralNetwork.TestNeuralNetwork()
         self.modelForVariantsPrediction.loadTorchModel(modelNameForVariantsPrediction)
+        self.helper = Helper()
 
     def predictConfirmedCases(self, testSequence):
         self.modelForDeltaConfirmedPrediction.testData = testSequence
@@ -191,7 +196,7 @@ class PredictingFutureScenario:
     def createLastDaysSequence(self, nTimeSteps):
         # dates = self.dataTilldate[self.timeColumn]
         df = self.dataTilldate[self.featuresToConsider]
-        return (None, df.loc[-nTimeSteps:], None)
+        return (None, df.iloc[-nTimeSteps:], None)
 
     def appendPredictionToOverallData(self):
         lastDate = self.dataTilldate['date'].tolist()[-1]
@@ -201,7 +206,6 @@ class PredictingFutureScenario:
         nextDate = nextDate.strftime('%Y-%m-%d')
         newPredictedCases = {}
         lastDaysSequence = [self.createLastDaysSequence(11)]
-        #print(lastDaysSequence)
         for feature in self.featuresToConsider:
             if feature=='delta7Confirmed':
                 newPredictedCases.update({feature:self.predictConfirmedCases(lastDaysSequence)})
@@ -215,10 +219,25 @@ class PredictingFutureScenario:
                 newPredictedCases.update({feature:self.predictVariantCases(lastDaysSequence)})
             if feature=='weekday':
                 newPredictedCases.update({feature:dayOfWeek})
-            print(newPredictedCases)
+            # print(newPredictedCases.get(feature))
         newPredictedCases.update({self.timeColumn:nextDate})
-        self.dataTilldate.append(newPredictedCases, ignore_index = True)
-        print(self.dataTilldate.tail())
+        self.dataTilldate = self.dataTilldate.append(newPredictedCases, ignore_index = True)
+        # print(self.dataTilldate.tail())
+        return self.dataTilldate
 
-    def generateDataTillDate(self):
-        pass
+    def generateDataForNextDeltaDays(self, delta = 30):
+        for i in range(delta):
+            self.dataTilldate = self.appendPredictionToOverallData()
+        print(self.dataTilldate[self.featuresToConsider])
+        return self.dataTilldate
+
+    def visualizeDataPredictedForFuture(self, statsOfAllColumns, delta=30):
+        for feature in self.featuresToConsider:
+            if feature == 'weekday':
+                continue
+            else:
+                self.dataTilldate[feature] = self.dataTilldate[feature] * (statsOfAllColumns.loc['max', feature] - statsOfAllColumns.loc['min', feature]) + statsOfAllColumns.loc['min', feature]
+        dd = self.dataTilldate[self.featuresToConsider].drop('weekday', axis=1)
+        dd = dd.iloc[-delta:]
+        dd.plot.line()
+        plt.show()

@@ -7,6 +7,7 @@
 #----------------------------------------------------
 
 import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from Constants import CovidResourcesAndHyperparameters
 from DataCollection import CollectCovidData
@@ -15,7 +16,7 @@ from DeepLearningModel import DataProcessing
 if __name__ == "__main__":
 	dataCollection = CollectCovidData.CollectCovidData()
 	df = dataCollection.getDelhidata(True)
-	df = pd.read_csv(CovidResourcesAndHyperparameters.pathToSavePredictionRelatedData + '/DelhiCovidData.csv')
+	#df = pd.read_csv(CovidResourcesAndHyperparameters.pathToSavePredictionRelatedData + '/DelhiCovidData.csv')
 	# df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
 
 	# Defining Learning Constants
@@ -28,6 +29,7 @@ if __name__ == "__main__":
 	batchSize = CovidResourcesAndHyperparameters.batchSize
 
 	# Doing Normalisation
+	statsOfAllColumns = df.describe()
 	maxPrediction, minPrediction = df[featureToPredict].max(), df[featureToPredict].min()
 	scaler = MinMaxScaler(feature_range=(0, 1))
 	for feature in featuresToConsider:
@@ -35,7 +37,6 @@ if __name__ == "__main__":
 		normalizedData = scaler.fit_transform(featureData.values.reshape(-1, 1))
 		df[feature] = normalizedData.flatten()
 
-	'''
 	predictFuture = DataProcessing.PredictingFutureScenario(df, featuresToConsider,
 															CovidResourcesAndHyperparameters.a,
 															CovidResourcesAndHyperparameters.b,
@@ -43,7 +44,10 @@ if __name__ == "__main__":
 															CovidResourcesAndHyperparameters.d,
 															CovidResourcesAndHyperparameters.e,
 															)
-	predictFuture.appendPredictionToOverallData()
+	# df = predictFuture.appendPredictionToOverallData(maxPrediction, minPrediction)
+	predictForFutureDelta = 7
+	df = predictFuture.generateDataForNextDeltaDays(predictForFutureDelta)
+	predictFuture.visualizeDataPredictedForFuture(statsOfAllColumns, predictForFutureDelta)
 	'''
 	# Processing Data
 	dataProcessing = DataProcessing.DataProcessing(dataToLearn = df,
@@ -63,4 +67,4 @@ if __name__ == "__main__":
 
 	# Cross Validation of Model
 	# dataProcessing.predictResultsForKfolds(kfold, maxPrediction, minPrediction)
-
+	'''
